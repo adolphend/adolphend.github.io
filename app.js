@@ -9,6 +9,124 @@ function Ventures(){return e(Section,{id:"ventures",dark:true,eyebrow:"Main focu
 function Roadmap(){const steps=[["01","Problem","Define the pain point, users, urgency, and why the project matters."],["02","Proposal","Shape the value proposition, operating model, business logic, and impact path."],["03","Pilot","Build a small test: MVP, field pilot, workshop, local hub, or prototype."],["04","Partners","Find contributors, cofounders, funders, buyers, technical partners, and early users."],["05","Launch","Move toward a nonprofit initiative, for-profit company, hybrid platform, or acquisition path."]];return e(Section,{id:"roadmap",eyebrow:"From proposal to implementation",title:"A simple path from idea to venture"},e("div",{className:"roadmap"},e("div",{className:"steps"},steps.map(s=>e("div",{key:s[0],className:"step"},e("div",{className:"num"},s[0]),e("h3",null,s[1]),e("p",null,s[2]))))))}
 function ResearchNote(){const countries=[...new Set(talks.map(t=>t[0]+" "+t[1]))];return e(Section,{id:"research-note",eyebrow:"Secondary note",title:"Research talks, seminars, workshops, conferences, and countries",intro:"This section is supporting background only. The main focus remains the project proposals and company-creation opportunities."},e("div",{className:"note-box"},e("p",{className:"mini-label"},"Countries represented"),e("div",{className:"tag-row"},countries.map(c=>e(Chip,{key:c},c)))),e("div",{className:"talks"},talks.map(t=>e("article",{key:t[2]+t[4],className:"talk"},e("div",{className:"tag-row"},e(Chip,null,t[0]+" "+t[1]),e(Chip,null,t[2]),e(Chip,null,t[3])),e("h3",null,t[4]),e("p",null,t[5]),e("p",null,t[6]+", "+t[1]))))) }
 function Assistant(){const[q,setQ]=useState("");const[messages,setMessages]=useState([{from:"bot",text:"Ask about proposals, contribution, cofounding, acquisition, funding, implementation, or the secondary research note."}]);function answer(x){const s=x.toLowerCase();if(s.includes("buy")||s.includes("acquire")||s.includes("license"))return"These concepts are open for discussion with people or organizations interested in buying, acquiring, licensing, adapting, or continuing a project concept. Use the contact form for serious inquiries.";if(s.includes("cofound")||s.includes("contribute")||s.includes("collabor"))return"The site is looking for contributors, collaborators, cofounders, technical partners, business partners, funders, and implementation partners.";if(s.includes("afriwave"))return ventures[0].elevator;if(s.includes("checkin"))return ventures[1].elevator;if(s.includes("empower"))return ventures[2].elevator;if(s.includes("agrifeed"))return ventures[3].elevator;if(s.includes("real estate")||s.includes("property"))return ventures[4].elevator;if(s.includes("thz")||s.includes("research"))return"The research note lists talks, seminars, workshops, and conferences in Spain, Germany, Romania, the United States, the United Kingdom, and Finland. This is secondary background, not the main purpose of the website.";return"I can answer from the website and proposal-document content. For direct collaboration, acquisition, funding, or implementation discussions, use the contact form."}function ask(text=q){if(!text.trim())return;setMessages([...messages,{from:"you",text},{from:"bot",text:answer(text)}]);setQ("")}return e(Section,{id:"assistant",eyebrow:"Document-grounded assistant",title:"Ask about the project proposals",intro:"The assistant should answer from the website and attached proposal documents. It helps visitors understand proposals, compare ideas, and move toward contribution, cofounding, funding, acquisition, adaptation, or implementation discussions."},e("div",{className:"assistant-grid"},e("p",{className:"section-intro"},"In a production version, connect this assistant to a document knowledge base containing the proposal documents. The public page does not expose a private email address."),e("div",{className:"chat"},e("div",{className:"chat-buttons"},["How can I contribute?","Can I acquire a concept?","Explain AfriWave","Explain AgriFeed"].map(c=>e("button",{key:c,onClick:()=>ask(c)},c))),e("div",{className:"messages"},messages.map((m,i)=>e("p",{key:i,className:"msg "+(m.from==="bot"?"bot":"you")},m.text))),e("div",{className:"chat-input"},e("input",{value:q,onChange:ev=>setQ(ev.target.value),onKeyDown:ev=>{if(ev.key==="Enter")ask()},placeholder:"Ask about a proposal..."}),e("button",{onClick:()=>ask()},"Send"))))) }
-function Contact(){const[sent,setSent]=useState(false);return e(Section,{id:"contact",eyebrow:"Contact form",title:"Interested in contributing, cofounding, funding, or acquiring a concept?"},e("div",{className:"contact-card"},sent?e("p",{className:"success"},"Message prepared. Connect this form to Formspree, Basin, Supabase Edge Functions, or Cloudflare Workers to receive messages."):e("form",{className:"form",onSubmit:ev=>{ev.preventDefault();setSent(true)}},e("input",{required:true,placeholder:"Name"}),e("input",{required:true,type:"email",placeholder:"Email"}),e("input",{placeholder:"Organization or background"}),e("select",null,e("option",null,"Main interest"),e("option",null,"Collaborate or contribute"),e("option",null,"Cofound or operate"),e("option",null,"Fund or support a pilot"),e("option",null,"Buy, acquire, license, or continue a concept"),e("option",null,"Research discussion")),e("textarea",{required:true,placeholder:"Write your message, proposal, collaboration idea, cofounding interest, acquisition interest, funding interest, or question..."}),e("button",null,"Submit inquiry"))))}
+function Contact() {
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const FORMSPREE_ENDPOINT = "https://formspree.io/f/xpqnbokr";
+
+  async function handleSubmit(ev) {
+    ev.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const form = ev.currentTarget;
+    const data = new FormData(form);
+
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        body: data,
+        headers: {
+          Accept: "application/json"
+        }
+      });
+
+      if (response.ok) {
+        setSent(true);
+        form.reset();
+      } else {
+        setError("The message could not be sent. Please try again.");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    }
+
+    setLoading(false);
+  }
+
+  return e(
+    Section,
+    {
+      id: "contact",
+      eyebrow: "Contact form",
+      title: "Interested in contributing, cofounding, funding, or acquiring a concept?"
+    },
+    e(
+      "div",
+      { className: "contact-card" },
+      sent
+        ? e(
+            "p",
+            { className: "success" },
+            "Thank you. Your message has been sent successfully."
+          )
+        : e(
+            "form",
+            { className: "form", onSubmit: handleSubmit },
+
+            e("input", {
+              required: true,
+              name: "name",
+              placeholder: "Name"
+            }),
+
+            e("input", {
+              required: true,
+              type: "email",
+              name: "email",
+              placeholder: "Email"
+            }),
+
+            e("input", {
+              name: "organization",
+              placeholder: "Organization or background"
+            }),
+
+            e(
+              "select",
+              { name: "interest" },
+              e("option", { value: "" }, "Main interest"),
+              e("option", { value: "Collaborate or contribute" }, "Collaborate or contribute"),
+              e("option", { value: "Cofound or operate" }, "Cofound or operate"),
+              e("option", { value: "Fund or support a pilot" }, "Fund or support a pilot"),
+              e(
+                "option",
+                { value: "Buy, acquire, license, or continue a concept" },
+                "Buy, acquire, license, or continue a concept"
+              ),
+              e("option", { value: "Research discussion" }, "Research discussion")
+            ),
+
+            e("textarea", {
+              required: true,
+              name: "message",
+              placeholder:
+                "Write your message, proposal, collaboration idea, cofounding interest, acquisition interest, funding interest, or question..."
+            }),
+
+            error &&
+              e(
+                "p",
+                {
+                  style: {
+                    color: "#b91c1c",
+                    fontWeight: "800",
+                    margin: "0"
+                  }
+                },
+                error
+              ),
+
+            e(
+              "button",
+              { type: "submit", disabled: loading },
+              loading ? "Sending..." : "Submit inquiry"
+            )
+          )
+    )
+  );
+}
 function App(){return e(React.Fragment,null,e(Navbar),e(Hero),e(Ventures),e(Roadmap),e(ResearchNote),e(Assistant),e(Contact),e("footer",{className:"footer"},e("div",{className:"container"},e("b",null,"Impact Venture Proposal Lab"),e("p",null,"Project concepts are exploratory and presented to attract collaborators, contributors, cofounders, funders, buyers, acquirers, and implementation partners."))))}
 ReactDOM.createRoot(document.getElementById("root")).render(e(App));
